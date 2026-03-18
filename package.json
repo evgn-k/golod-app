@@ -1,0 +1,27 @@
+{
+  "name": "golod-app",
+  "version": "1.0.0",
+  "description": "Счетчик голодания - PWA приложение для отслеживания времени голодовки",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "pwa",
+    "fasting",
+    "health",
+    "chart"
+  ],
+  "author": "Evgeny",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "autoprefixer": "^10.4.27",
+    "chart.js": "^4.5.1",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "vite": "^8.0.0"
+  }
+}
