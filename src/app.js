@@ -1,105 +1,234 @@
-import { Chart } from 'chart.js';
 import { motivationQuotes } from './motivation.js';
 
-Chart.register(Chart.ArcElement, Chart.Tooltip, Chart.Legend);
+const START_TIME = new Date(2026, 2, 10, 22, 0, 0).getTime();
+const END_TIME = new Date(2026, 2, 31, 22, 0, 0).getTime();
+const TOTAL_DURATION = Math.max(END_TIME - START_TIME, 1);
+const LOCALE = 'ru-RU';
 
-const START_TIME = new Date('2026-03-10T22:00:00').getTime();
-const END_TIME = new Date('2026-03-31T22:00:00').getTime();
-const TOTAL_DURATION = END_TIME - START_TIME;
+const DATE_FORMATTER = new Intl.DateTimeFormat(LOCALE, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+});
 
-function initChart() {
-  const ctx = document.getElementById('fastingChart').getContext('2d');
-  const gradientCompleted = ctx.createLinearGradient(0, 0, 300, 300);
-  gradientCompleted.addColorStop(0, '#f59e0b');
-  gradientCompleted.addColorStop(1, '#fcd34d');
-  
-  const gradientRemaining = ctx.createLinearGradient(0, 0, 300, 300);
-  gradientRemaining.addColorStop(0, '#3b82f6');
-  gradientRemaining.addColorStop(1, '#60a5fa');
-  
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Пройдено', 'Осталось'],
-      datasets: [{
-        data: [0, 100],
-        backgroundColor: [gradientCompleted, gradientRemaining],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '75%',
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false }
-      }
-    }
-  });
-}
+const NOW_FORMATTER = new Intl.DateTimeFormat(LOCALE, {
+  day: 'numeric',
+  month: 'long',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
 
-function formatTime(ms) {
-  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-  
+const refs = {
+  currentTime: document.getElementById('currentTime'),
+  fastingStatus: document.getElementById('fastingStatus'),
+  rangeLabel: document.getElementById('rangeLabel'),
+  progressRing: document.getElementById('progressRing'),
+  progressPercent: document.getElementById('progressPercent'),
+  progressLabel: document.getElementById('progressLabel'),
+  progressTitle: document.getElementById('progressTitle'),
+  progressSummary: document.getElementById('progressSummary'),
+  countdownTitle: document.getElementById('countdownTitle'),
+  durationLabel: document.getElementById('durationLabel'),
+  days: document.getElementById('days'),
+  hours: document.getElementById('hours'),
+  minutes: document.getElementById('minutes'),
+  seconds: document.getElementById('seconds'),
+  startTimeLabel: document.getElementById('startTimeLabel'),
+  endTimeLabel: document.getElementById('endTimeLabel'),
+  elapsedValue: document.getElementById('elapsedValue'),
+  remainingValue: document.getElementById('remainingValue'),
+  quoteText: document.getElementById('quoteText'),
+  quoteAuthor: document.getElementById('quoteAuthor'),
+  nextQuoteButton: document.getElementById('nextQuoteButton')
+};
+
+let currentQuoteIndex = -1;
+
+function formatClockParts(ms) {
+  const safeMs = Math.max(ms, 0);
+  const days = Math.floor(safeMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((safeMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((safeMs % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((safeMs % (1000 * 60)) / 1000);
+
   return {
-    days: days.toString().padStart(2, '0'),
-    hours: hours.toString().padStart(2, '0'),
-    minutes: minutes.toString().padStart(2, '0'),
-    seconds: seconds.toString().padStart(2, '0')
+    days: String(days).padStart(2, '0'),
+    hours: String(hours).padStart(2, '0'),
+    minutes: String(minutes).padStart(2, '0'),
+    seconds: String(seconds).padStart(2, '0')
   };
 }
 
-function updateTimer() {
-  const now = Date.now();
+function formatDurationLabel(ms) {
+  if (ms <= 0) {
+    return '0 мин';
+  }
+
+  const totalMinutes = Math.floor(ms / (1000 * 60));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+  const parts = [];
+
+  if (days > 0) {
+    parts.push(`${days} д`);
+  }
+  if (hours > 0) {
+    parts.push(`${hours} ч`);
+  }
+  if (minutes > 0 && days === 0) {
+    parts.push(`${minutes} мин`);
+  }
+
+  return parts.slice(0, 2).join(' ');
+}
+
+function getState(now) {
+  if (now < START_TIME) {
+    return {
+      phase: 'upcoming',
+      label: 'До старта',
+      status: 'Подготовка',
+      progress: 0,
+      timeLeft: START_TIME - now,
+      elapsed: 0,
+      remaining: TOTAL_DURATION
+    };
+  }
+
+  if (now >= END_TIME) {
+    return {
+      phase: 'completed',
+      label: 'Голодовка завершена',
+      status: 'Финиш',
+      progress: 100,
+      timeLeft: 0,
+      elapsed: TOTAL_DURATION,
+      remaining: 0
+    };
+  }
+
   const elapsed = now - START_TIME;
   const remaining = END_TIME - now;
-  const progress = Math.min(100, Math.max(0, (elapsed / TOTAL_DURATION) * 100));
-  
-  const chart = Chart.getChart('fastingChart');
-  if (chart) {
-    chart.data.datasets[0].data = [progress, 100 - progress];
-    chart.update('none');
+
+  return {
+    phase: 'active',
+    label: 'До завершения',
+    status: 'В процессе',
+    progress: (elapsed / TOTAL_DURATION) * 100,
+    timeLeft: remaining,
+    elapsed,
+    remaining
+  };
+}
+
+function updateProgress(state) {
+  const progressValue = Math.round(state.progress);
+
+  refs.progressRing.style.setProperty('--progress', `${state.progress.toFixed(2)}%`);
+  refs.progressPercent.textContent = `${progressValue}%`;
+  refs.progressLabel.textContent = state.phase === 'completed' ? 'завершено' : 'пройдено';
+  refs.progressTitle.textContent =
+    state.phase === 'upcoming' ? 'Подготовка к старту' : 'Путь до завершения';
+
+  if (state.phase === 'upcoming') {
+    refs.progressSummary.textContent =
+      'Отсчет уже запущен: сейчас экран ждёт стартового момента и держит весь план периода перед глазами.';
+    return;
   }
-  
-  document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
-  
-  if (remaining > 0) {
-    const time = formatTime(remaining);
-    document.getElementById('days').textContent = time.days;
-    document.getElementById('hours').textContent = time.hours;
-    document.getElementById('minutes').textContent = time.minutes;
-    document.getElementById('seconds').textContent = time.seconds;
-    
-    document.getElementById('currentTime').textContent = 
-      'Текущее время: ' + new Date(now).toLocaleString('ru-RU');
-  } else {
-    if (chart) {
-      chart.data.datasets[0].data = [100, 0];
-      chart.update('none');
-    }
-    document.getElementById('progressPercent').textContent = '100%';
-    document.getElementById('currentTime').textContent = 'Голодовка завершена!';
+
+  if (state.phase === 'completed') {
+    refs.progressSummary.textContent =
+      'Цель достигнута. Кольцо закрыто полностью, таймер остановлен на финальной точке.';
+    return;
   }
+
+  refs.progressSummary.textContent =
+    `Пройдено ${progressValue}% пути. Внутри периода уже прошло ${formatDurationLabel(state.elapsed)}.`;
+}
+
+function updateCountdown(state, now) {
+  const parts = formatClockParts(state.timeLeft);
+
+  refs.days.textContent = parts.days;
+  refs.hours.textContent = parts.hours;
+  refs.minutes.textContent = parts.minutes;
+  refs.seconds.textContent = parts.seconds;
+
+  refs.currentTime.textContent = `Сейчас: ${NOW_FORMATTER.format(now)}`;
+  refs.countdownTitle.textContent = state.label;
+  refs.fastingStatus.textContent = state.status;
+  refs.fastingStatus.dataset.phase = state.phase;
+  refs.elapsedValue.textContent = formatDurationLabel(state.elapsed);
+  refs.remainingValue.textContent =
+    state.phase === 'upcoming'
+      ? formatDurationLabel(START_TIME - now)
+      : formatDurationLabel(state.remaining);
+}
+
+function updateStaticLabels() {
+  refs.rangeLabel.textContent = `${DATE_FORMATTER.format(START_TIME)} - ${DATE_FORMATTER.format(END_TIME)}`;
+  refs.startTimeLabel.textContent = DATE_FORMATTER.format(START_TIME);
+  refs.endTimeLabel.textContent = DATE_FORMATTER.format(END_TIME);
+  refs.durationLabel.textContent = `Длительность периода: ${formatDurationLabel(TOTAL_DURATION)}`;
+}
+
+function updateUI() {
+  const now = Date.now();
+  const state = getState(now);
+
+  updateProgress(state);
+  updateCountdown(state, now);
 }
 
 function showRandomQuote() {
-  const quote = motivationQuotes[Math.floor(Math.random() * motivationQuotes.length)];
-  document.getElementById('quoteText').textContent = quote.text;
-  if (quote.author) {
-    document.getElementById('quoteAuthor').textContent = '— ' + quote.author;
+  if (motivationQuotes.length === 0) {
+    refs.quoteText.textContent = 'Добавьте мотивационные фразы в src/motivation.js.';
+    refs.quoteAuthor.textContent = '—';
+    return;
+  }
+
+  let nextIndex = Math.floor(Math.random() * motivationQuotes.length);
+
+  if (motivationQuotes.length > 1) {
+    while (nextIndex === currentQuoteIndex) {
+      nextIndex = Math.floor(Math.random() * motivationQuotes.length);
+    }
+  }
+
+  currentQuoteIndex = nextIndex;
+
+  const quote = motivationQuotes[currentQuoteIndex];
+  refs.quoteText.textContent = quote.text;
+  refs.quoteAuthor.textContent = quote.author ? `— ${quote.author}` : '—';
+}
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  try {
+    const serviceWorkerUrl = new URL('./service-worker.js', window.location.href);
+    await navigator.serviceWorker.register(serviceWorkerUrl);
+  } catch (error) {
+    console.error('Не удалось зарегистрировать service worker:', error);
   }
 }
 
 function init() {
-  initChart();
-  updateTimer();
+  updateStaticLabels();
+  updateUI();
   showRandomQuote();
-  setInterval(updateTimer, 1000);
-  setInterval(showRandomQuote, 60000);
+  registerServiceWorker();
+
+  refs.nextQuoteButton.addEventListener('click', showRandomQuote);
+
+  window.setInterval(updateUI, 1000);
+  window.setInterval(showRandomQuote, 60000);
 }
 
 document.addEventListener('DOMContentLoaded', init);

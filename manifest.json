@@ -1,22 +1,19 @@
 {
   "name": "Счетчик голодания",
   "short_name": "Голодовка",
-  "description": "Отслеживайте прогресс голодовки с помощью круговой диаграммы и таймера реального времени",
-  "start_url": "/",
+  "description": "Трекер голодовки с живым обратным отсчетом, кольцом прогресса и мотивационными фразами.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
+  "background_color": "#091722",
+  "theme_color": "#091722",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
