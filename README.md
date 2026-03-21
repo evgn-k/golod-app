@@ -1,7 +1,6 @@
 ---
-include_toc: side
-lang: ru
-gitea: table
+include_toc: true
+gitea: none
 ---
 
 [![repo](https://s.evgn.ru/badge/repo-golod-app-2ea44f)](https://git.evgn.ru/evgeny/golod-app)
