@@ -310,8 +310,11 @@ function updateProgress(state) {
 }
 
 function updateCountdown(state, now) {
-  if (!refs.days || !refs.hours || !refs.minutes || !refs.seconds) {
-    console.error('[DEBUG] Timer elements not initialized');
+  // DEBUG: Log all refs to identify null elements
+  const requiredRefs = ['days', 'hours', 'minutes', 'seconds', 'countdownTitle', 'fastingStatus', 'elapsedValue', 'remainingValue'];
+  const missingRefs = requiredRefs.filter(key => !refs[key]);
+  if (missingRefs.length > 0) {
+    console.error('[DEBUG] Missing refs in updateCountdown:', missingRefs);
     return;
   }
   
@@ -340,6 +343,14 @@ function updateCountdown(state, now) {
 }
 
 function updateStaticLabels(state) {
+  // DEBUG: Check refs
+  const requiredRefs = ['rangeLabel', 'startTimeLabel', 'endTimeLabel', 'durationLabel'];
+  const missingRefs = requiredRefs.filter(key => !refs[key]);
+  if (missingRefs.length > 0) {
+    console.error('[DEBUG] Missing refs in updateStaticLabels:', missingRefs);
+    return;
+  }
+  
   refs.rangeLabel.textContent = `${DATE_FORMATTER.format(state.startTime)} - ${DATE_FORMATTER.format(state.endTime)}`;
   refs.startTimeLabel.textContent = DATE_FORMATTER.format(state.startTime);
   refs.endTimeLabel.textContent = DATE_FORMATTER.format(state.endTime);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golod-app-v13';
+const CACHE_NAME = 'golod-app-v14';
 const APP_SHELL = [
   './',
   './index.html',
