@@ -1,12 +1,12 @@
-const CACHE_NAME = 'golod-app-v10';
+const CACHE_NAME = 'golod-app-v12';
 const APP_SHELL = [
   './',
   './index.html',
-  './assets/index-B1-gZgAk.js',
-  './assets/index-CYMb9IPC.css',
-  './assets/favicon-CaMMpFW5.svg',
-  './assets/icon-DVtki7Rh.svg',
-  './assets/manifest-CrVMqNic.json',
+  './assets/index-CjwQqrOt.js',
+  './assets/index-DSiJBi5f.css',
+  './assets/favicon-CaMMpFW5-CaMMpFW5.svg',
+  './assets/icon-DVtki7Rh-DVtki7Rh.svg',
+  './assets/manifest-CrVMqNic-CrVMqNic.json',
   './favicon.svg',
   './icon.svg',
   './manifest.json'

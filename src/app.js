@@ -150,28 +150,41 @@ const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat(LOCALE, {
 const refs = {};
 
 function initRefs() {
-  refs.currentTime = document.getElementById('currentTime');
-  refs.fastingStatus = document.getElementById('fastingStatus');
-  refs.rangeLabel = document.getElementById('rangeLabel');
-  refs.progressRing = document.getElementById('progressRing');
-  refs.progressPercent = document.getElementById('progressPercent');
-  refs.progressLabel = document.getElementById('progressLabel');
-  refs.progressTitle = document.getElementById('progressTitle');
-  refs.progressSummary = document.getElementById('progressSummary');
-  refs.countdownTitle = document.getElementById('countdownTitle');
-  refs.durationLabel = document.getElementById('durationLabel');
-  refs.days = document.getElementById('days');
-  refs.hours = document.getElementById('hours');
-  refs.minutes = document.getElementById('minutes');
-  refs.seconds = document.getElementById('seconds');
-  refs.startTimeLabel = document.getElementById('startTimeLabel');
-  refs.endTimeLabel = document.getElementById('endTimeLabel');
-  refs.elapsedValue = document.getElementById('elapsedValue');
-  refs.remainingValue = document.getElementById('remainingValue');
-  refs.quoteText = document.getElementById('quoteText');
-  refs.quoteAuthor = document.getElementById('quoteAuthor');
-  refs.nextQuoteButton = document.getElementById('nextQuoteButton');
-  refs.timerGrid = document.querySelector('.timer-grid');
+  const elements = {
+    currentTime: 'currentTime',
+    fastingStatus: 'fastingStatus',
+    rangeLabel: 'rangeLabel',
+    progressRing: 'progressRing',
+    progressPercent: 'progressPercent',
+    progressLabel: 'progressLabel',
+    progressTitle: 'progressTitle',
+    progressSummary: 'progressSummary',
+    countdownTitle: 'countdownTitle',
+    durationLabel: 'durationLabel',
+    days: 'days',
+    hours: 'hours',
+    minutes: 'minutes',
+    seconds: 'seconds',
+    startTimeLabel: 'startTimeLabel',
+    endTimeLabel: 'endTimeLabel',
+    elapsedValue: 'elapsedValue',
+    remainingValue: 'remainingValue',
+    quoteText: 'quoteText',
+    quoteAuthor: 'quoteAuthor',
+    nextQuoteButton: 'nextQuoteButton',
+    timerGrid: '.timer-grid'
+  };
+  
+  for (const [key, id] of Object.entries(elements)) {
+    if (id.startsWith('.')) {
+      refs[key] = document.querySelector(id);
+    } else {
+      refs[key] = document.getElementById(id);
+    }
+    if (!refs[key]) {
+      console.error(`[DEBUG] Element not found: ${key} (id: ${id})`);
+    }
+  }
 }
 
 // ==================== УТИЛИТЫ ====================
@@ -297,6 +310,11 @@ function updateProgress(state) {
 }
 
 function updateCountdown(state, now) {
+  if (!refs.days || !refs.hours || !refs.minutes || !refs.seconds) {
+    console.error('[DEBUG] Timer elements not initialized');
+    return;
+  }
+  
   const parts = formatClockParts(state.timeLeft);
 
   refs.days.textContent = parts.days;
@@ -304,7 +322,7 @@ function updateCountdown(state, now) {
   refs.minutes.textContent = parts.minutes;
   refs.seconds.textContent = parts.seconds;
 
-  refs.currentTime.textContent = `Сейчас: ${NOW_FORMATTER.format(now)}`;
+  if (refs.currentTime) refs.currentTime.textContent = `Сейчас: ${NOW_FORMATTER.format(now)}`;
   refs.countdownTitle.textContent = state.label;
   refs.fastingStatus.textContent = state.status;
   refs.fastingStatus.dataset.phase = state.phase;
