@@ -1,0 +1,19 @@
+{
+  "name": "Счетчик голодания",
+  "short_name": "Голодовка",
+  "description": "Трекер голодовки с живым обратным отсчетом, кольцом прогресса и мотивационными фразами.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07131d",
+  "theme_color": "#07131d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
